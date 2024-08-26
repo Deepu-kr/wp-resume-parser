@@ -6,6 +6,11 @@ Version: 1.0
 Author: Deepu Raman
 */
 
+// Include the Composer autoloader
+require_once __DIR__ . '/vendor/autoload.php';
+
+use Smalot\PdfParser\Parser;
+
 function create_resume_table() {
     global $wpdb;
     $table_name = $wpdb->prefix . 'resumes';
@@ -69,7 +74,8 @@ function handle_resume_upload() {
 add_action('init', 'handle_resume_upload');
 
 function parse_resume($email, $file_path) {
-    $content = file_get_contents($file_path);
+    $content = my_pdf_parser_function($file_path);
+
     // Extract information (this is just a simple example, you would need a proper parser)
     $skills = extract_skills($content);
     $experience = extract_experience($content);
@@ -78,9 +84,33 @@ function parse_resume($email, $file_path) {
     save_parsed_data($email, $skills, $experience, $education);
 }
 
+function my_pdf_parser_function($file_path) {
+    $parser = new Parser();
+    $pdf = $parser->parseFile($file_path);
+    $text = $pdf->getText();
+
+    // Return or process the extracted text
+    return $text;
+}
+
 function extract_skills($content) {
-    // Implement skill extraction logic
-    return [];
+    // List of keywords/skills to search for
+    $skills = [
+        'PHP', 'JavaScript', 'Python', 'MySQL', 'Laravel', 'Django',
+        'HTML', 'CSS', 'React', 'Angular', 'Node.js', 'Ruby', 'Java'
+    ];
+
+    // Initialize an array to hold the found skills
+    $foundSkills = [];
+
+    // Search for each skill in the content
+    foreach ($skills as $skill) {
+        if (stripos($content, $skill) !== false) {
+            $foundSkills[] = $skill;
+        }
+    }
+
+    return $foundSkills;
 }
 
 function extract_experience($content) {
@@ -89,8 +119,21 @@ function extract_experience($content) {
 }
 
 function extract_education($content) {
-    // Implement education extraction logic
-    return [];
+    // List of keywords/skills to search for
+    $education = [
+        'Btech', 'Bachelor in Technology', 'Degree',
+    ];
+
+    // Initialize an array to hold the found skills
+    $foundEducation = [];
+
+    // Search for each skill in the content
+    foreach ($education as $word) {
+        if (stripos($content, $word) !== false) {
+            $foundEducation[] = $word;
+        }
+    }
+    return $foundEducation;
 }
 
 function save_parsed_data($email, $skills, $experience, $education) {
